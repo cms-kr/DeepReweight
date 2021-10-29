@@ -9,25 +9,32 @@ def getNodeFeature(p, *featureNames):
 getNodeFeatures = np.vectorize(getNodeFeature)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('input', nargs='+', action='store', type=str, help='input file name')
-parser.add_argument('-o', '--output', action='store', type=str, help='output directory name', required=True)
+parser.add_argument('-i', '--input', action='store', type=str, help='input file name', required=True)
+parser.add_argument('-o', '--output', action='store', type=str, help='output file name', required=True)
 args = parser.parse_args()
 
 if not args.output.endswith('.h5'): outPrefix, outSuffix = args.output+'/data', '.h5'
 else: outPrefix, outSuffix = args.output.rsplit('.', 1)
 
-fName = "events.lhe"
-#fName = "pylhe-drell-yan-ll-lhe.gz"
+## Hold list of variables, by type
+out_weight = []
+out_weights = []
+out_node_featureNamesF = ['px', 'py', 'pz', 'm']
+out_node_featuresF = [[], [], [], []]
+out_node_featureNamesI = ['id', 'status', 'spin']
+out_node_featuresI = [[], [], []]
+out_edgeIndices = []
+out_edgesByColor = []
 
-lheInit = pylhe.readLHEInit(fName)
+lheInit = pylhe.readLHEInit(args.input)
 ## Find out which is the unit weight
 proc2Weight0 = {}
 for procInfo in lheInit['procInfo']:
     procId = int(procInfo['procId'])
     proc2Weight0[procId] = procInfo['unitWeight']
 
-lheEvents = pylhe.readLHEWithAttributes(fName)
-#lheEvents = pylhe.readLHE(fName)
+lheEvents = pylhe.readLHEWithAttributes(args.input)
+#lheEvents = pylhe.readLHE(args.input)
 for event in lheEvents:
     ## Extract event weights and scale them
     procId = int(event.eventinfo.pid)
@@ -36,12 +43,51 @@ for event in lheEvents:
     weight = event.eventinfo.weight/weight0
     weights = [w/weight0 for w in event.weights.values()]
 
+    out_weight.append(weight)
+    out_weights.append(weights)
+
     ## Build particle decay tree
     n = int(event.eventinfo.nparticles)
 
-    node_momentum = np.stack(getNodeFeatures(event.particles, 'px', 'py', 'pz', 'm'), axis=0)
-    node_features = np.stack(getNodeFeatures(event.particles, 'id', 'status', 'spin'), axis=0)
+    node_featuresF = getNodeFeatures(event.particles, *(out_node_featureNamesF))
+    node_featuresI = getNodeFeatures(event.particles, *(out_node_featureNamesI))
+    for i, values in enumerate(node_featuresF):
+        out_node_featuresF[i].append(values)
+    for i, values in enumerate(node_featuresI):
+        out_node_featuresI[i].append(values)
 
+    node_edges = getNodeFeatures(event.particles, 'mother1', 'mother2')
     #edge_index = np.zeros([2,n], dtype=np.long)
     #for i, p in enumerate(event.particles):
     #    print(p.id)
+
+## Merge output objects
+out_weight = np.array(out_weight)
+out_weights = np.stack(out_weights)
+for i in range(len(out_node_featuresF)):
+    out_node_featuresF[i] = np.concatenate(out_node_featuresF[i])
+for i in range(len(out_node_featuresI)):
+    out_node_featuresI[i] = np.concatenate(out_node_featuresI[i])
+
+## Save output
+with h5py.File(args.output, 'w', libver='latest') as fout:
+    dtypeFA = h5py.special_dtype(vlen=np.dtype('float64'))
+    dtypeIA = h5py.special_dtype(vlen=np.dtype('uint32'))
+
+    fout_events = fout.create_group("events")
+    fout_events.create_dataset('weight', data=out_weight, dtype='f4')
+    fout_events.create_dataset('weights', data=out_weights, dtype='f4')
+
+    nEvents = len(out_weight)
+
+    for name, features in zip(out_node_featureNamesF, out_node_featuresF):
+        fout_events.create_dataset(name, (nEvents,), dtype=dtypeFA)
+        fout_events[name][...] = features
+    for name, features in zip(out_node_featureNamesI, out_node_featuresI):
+        fout_events.create_dataset(name, (nEvents,), dtype=dtypeIA)
+        fout_events[name][...] = features
+"""
+        self.jets_node1 = np.ndarray((0,), dtype=self.type_ia)
+        self.jets_node2 = np.ndarray((0,), dtype=self.type_ia)
+        fout_events.create_dataset(featureName, data=features, dtype='f4')
+"""
