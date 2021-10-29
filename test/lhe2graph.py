@@ -23,8 +23,10 @@ out_node_featureNamesF = ['px', 'py', 'pz', 'm']
 out_node_featuresF = [[], [], [], []]
 out_node_featureNamesI = ['id', 'status', 'spin']
 out_node_featuresI = [[], [], []]
-out_edgeIndices = []
-out_edgesByColor = []
+out_edgeIdxs1 = []
+out_edgeIdxs2 = []
+out_edgeByColorIdxs1 = []
+out_edgeByColorIdxs2 = []
 
 lheInit = pylhe.readLHEInit(args.input)
 ## Find out which is the unit weight
@@ -64,10 +66,10 @@ for event in lheEvents:
 ## Merge output objects
 out_weight = np.array(out_weight)
 out_weights = np.stack(out_weights)
-for i in range(len(out_node_featuresF)):
-    out_node_featuresF[i] = np.concatenate(out_node_featuresF[i])
-for i in range(len(out_node_featuresI)):
-    out_node_featuresI[i] = np.concatenate(out_node_featuresI[i])
+#for i in range(len(out_node_featuresF)):
+#    out_node_featuresF[i] = np.concatenate(out_node_featuresF[i])
+#for i in range(len(out_node_featuresI)):
+#    out_node_featuresI[i] = np.concatenate(out_node_featuresI[i])
 
 ## Save output
 with h5py.File(args.output, 'w', libver='latest') as fout:
@@ -86,8 +88,14 @@ with h5py.File(args.output, 'w', libver='latest') as fout:
     for name, features in zip(out_node_featureNamesI, out_node_featuresI):
         fout_events.create_dataset(name, (nEvents,), dtype=dtypeIA)
         fout_events[name][...] = features
-"""
-        self.jets_node1 = np.ndarray((0,), dtype=self.type_ia)
-        self.jets_node2 = np.ndarray((0,), dtype=self.type_ia)
-        fout_events.create_dataset(featureName, data=features, dtype='f4')
-"""
+
+    fout_graphs = fout.create_group('graphs')
+    fout_graphs.create_dataset('edgeIdxs1', (nEvents,), dtype=dtypeIA)
+    fout_graphs.create_dataset('edgeIdxs2', (nEvents,), dtype=dtypeIA)
+    fout_graphs['edgeIdxs1'][...] = out_edgeIdxs1
+    fout_graphs['edgeIdxs2'][...] = out_edgeIdxs2
+
+    fout_graphs.create_dataset('edgeByColorIdxs1', (nEvents,), dtype=dtypeIA)
+    fout_graphs.create_dataset('edgeByColorIdxs2', (nEvents,), dtype=dtypeIA)
+    fout_graphs['edgeByColorIdxs1'][...] = out_edgeByColorIdxs1
+    fout_graphs['edgeByColorIdxs2'][...] = out_edgeByColorIdxs2
