@@ -1,0 +1,19 @@
+## Configuration for the training, evaluation
+samples:
+  - name: tttt
+    label: 1
+    #path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/FCD0B4D1-E7D1-004A-B5AB-131A37EF1928.h5
+    path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/*.h5
+    xsec: 0.012
+    ngen: 11952188
+
+training:
+    randomSeed1: 12345
+    nDataLoaders: 16
+
+    shuffle: True
+    splitFractions: [0.6, 0.2] ## training set, validation set. (test set is the remaining sets)
+
+    epoch: 400
+    learningRate: 1e-4
+
