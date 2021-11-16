@@ -65,27 +65,32 @@ for event in lheEvents:
     ## Build particle decay tree
     mothers1, mothers2 = getNodeFeatures(event.particles, 'mother1', 'mother2')
 
-    out_edge1 = []
-    out_edge2 = []
+    edge1 = []
+    edge2 = []
     for i, (m1, m2) in enumerate(zip(mothers1, mothers2)):
         m1, m2 = int(m1), int(m2)
         if m1 == 0 or m2 == 0: continue
         for m in range(m1, m2+1):
-            out_edge1.append(i)
-            out_edge2.append(m-1)
-    out_edge1 = np.array(out_edge1, dtype=np.int32)
-    out_edge2 = np.array(out_edge2, dtype=np.int32)
+            edge1.append(i)
+            edge2.append(m-1)
+    edge1 = np.array(edge1, dtype=np.int32)
+    edge2 = np.array(edge2, dtype=np.int32)
+    out_edge1.append(edge1)
+    out_edge2.append(edge2)
 
     ## Build color connection
     colors1, colors2 = getNodeFeatures(event.particles, 'color1', 'color2')
 
-    out_edgeColor1 = []
-    out_edgeColor2 = []
+    edgeColor1 = []
+    edgeColor2 = []
     for i, color1 in enumerate(colors1):
         if color1 == 0: continue
         for j in np.where(colors2 == color1)[0]:
-            out_edgeColor1.append(i)
-            out_edgeColor2.append(j)
+            edgeColor1.append(i)
+            edgeColor2.append(j)
+    out_edgeColor1.append(edgeColor1)
+    out_edgeColor2.append(edgeColor2)
+
 if args.verbose: print("\nProcessing done.")
 
 if args.verbose: print("Merging output and saving into", args.output)
