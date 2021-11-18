@@ -6,11 +6,9 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', action='store', type=str, required=True, help='Path to the input file')
 parser.add_argument('-t', '--trained', action='store', type=str, required=True, help='Path to training output directory')
-parser.add_argument('-c', '--config', action='store', type=str, help='Configration file with sample information')
+#parser.add_argument('-c', '--config', action='store', type=str, help='Configration file with sample information')
 parser.add_argument('--device', action='store', type=int, default=0, help='device name')
 parser.add_argument('--batch', action='store', type=int, default=32, help='Batch size')
-parser.add_argument('--edgeType', action='store', type=str, default='decay',
-                                  choices=('none', 'all', 'decay', 'color'), help='graph edge type')
 args = parser.parse_args()
 
 import matplotlib.pyplot as plt
@@ -31,7 +29,7 @@ plt.show()
 
 ### Load configuration from the yaml file
 import yaml
-config = yaml.load(open(args.config).read(), Loader=yaml.FullLoader)
+config = yaml.load(open(args.trained + '/config.yaml').read(), Loader=yaml.FullLoader)
 
 if not os.path.exists(args.trained):
     print("Cannot find input directory")
@@ -44,7 +42,7 @@ if torch.cuda.is_available() and args.device >= 0: torch.cuda.set_device(args.de
 ##### Define dataset instance #####
 from dataset.LHEGraphDataset import *
 from torch_geometric.data import DataLoader
-dset = LHEGraphDataset(edgeType=args.edgeType)
+dset = LHEGraphDataset(edgeType=config['dataset']['edgeType'])
 #for sampleInfo in config['samples']:
 #    if 'ignore' in sampleInfo and sampleInfo['ignore']: continue
 #    name = sampleInfo['name']

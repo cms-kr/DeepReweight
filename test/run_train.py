@@ -7,15 +7,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--output', action='store', type=str, required=True, help='Path to output directory')
 
 parser.add_argument('--config', action='store', type=str, help='Configration file with sample information')
-parser.add_argument('--epoch', action='store', type=int, default=400,help='Number of epochs')
-parser.add_argument('--batch', action='store', type=int, default=32, help='Batch size')
-parser.add_argument('--lr', action='store', type=float, default=1e-4,help='Learning rate')
+parser.add_argument('--epoch', action='store', type=int, help='Number of epochs')
+parser.add_argument('--batch', action='store', type=int, help='Batch size')
+parser.add_argument('--lr', action='store', type=float, help='Learning rate')
 parser.add_argument('--seed', action='store', type=int, default=12345,help='random seed')
 parser.add_argument('--noshuffle', action='store_true', default=False, help='do not shuffle dataset')
 
 parser.add_argument('--device', action='store', type=int, default=0, help='device name')
 
-parser.add_argument('--edgeType', action='store', type=str, default='decay',
+parser.add_argument('--edgeType', action='store', type=str,
                                   choices=('none', 'all', 'decay', 'color'), help='graph edge type')
 args = parser.parse_args()
 
@@ -25,8 +25,11 @@ config = yaml.load(open(args.config).read(), Loader=yaml.FullLoader)
 config['training']['learningRate'] = float(config['training']['learningRate'])
 if args.seed: config['training']['randomSeed1'] = args.seed
 if args.epoch: config['training']['epoch'] = args.epoch
-if args.lr: config['training']['learningRate'] = args.lr
 if args.noshuffle: config['training']['shuffle'] = not args.noshuffle
+if args.epoch: config['training']['epoch'] = args.epoch
+if args.lr: config['training']['learningRate'] = args.lr
+if args.batch: config['training']['batchSize'] = args.batch
+if args.edgeType: config['dataset']['edgeType'] = args.edgeType
 
 import torch
 torch.set_num_threads(os.cpu_count())
@@ -36,7 +39,7 @@ if not os.path.exists(args.output): os.makedirs(args.output)
 ##### Define dataset instance #####
 from dataset.LHEGraphDataset import *
 from torch_geometric.data import DataLoader
-dset = LHEGraphDataset(edgeType=args.edgeType)
+dset = LHEGraphDataset(edgeType=config['dataset']['edgeType'])
 for sampleInfo in config['samples']:
     if 'ignore' in sampleInfo and sampleInfo['ignore']: continue
     name = sampleInfo['name']
@@ -57,8 +60,8 @@ else:
     trnDset, valDset, testDset = torch.utils.data.Subset(dset, lengths)
 
 kwargs = {'num_workers':min(config['training']['nDataLoaders'], os.cpu_count()), 'pin_memory':False}
-trnLoader = DataLoader(trnDset, batch_size=args.batch, shuffle=doShuffle, **kwargs)
-valLoader = DataLoader(valDset, batch_size=args.batch, shuffle=False, **kwargs)
+trnLoader = DataLoader(trnDset, batch_size=config['training']['batchSize'], shuffle=doShuffle, **kwargs)
+valLoader = DataLoader(valDset, batch_size=config['training']['batchSize'], shuffle=False, **kwargs)
 torch.manual_seed(torch.initial_seed())
 
 ##### Define model instance #####
@@ -81,6 +84,9 @@ with open(args.output+'/summary.txt', 'w') as fout:
     fout.write('\n\n')
     fout.write(str(model))
     fout.close()
+
+with open(args.output+'/config.yaml', 'w') as fout:
+    yaml.dump(config, fout)
 
 #from sklearn.metrics import accuracy_score
 import csv
