@@ -14,6 +14,9 @@ parser.add_argument('--seed', action='store', type=int, default=12345,help='rand
 parser.add_argument('--noshuffle', action='store_true', default=False, help='do not shuffle dataset')
 
 parser.add_argument('--device', action='store', type=int, default=0, help='device name')
+
+parser.add_argument('--edgeType', action='store', type=str, default='decay',
+                                  choices=('none', 'all', 'decay', 'color'), help='graph edge type')
 args = parser.parse_args()
 
 ### Load configuration from the yaml file
@@ -33,7 +36,7 @@ if not os.path.exists(args.output): os.makedirs(args.output)
 ##### Define dataset instance #####
 from dataset.LHEGraphDataset import *
 from torch_geometric.data import DataLoader
-dset = LHEGraphDataset()
+dset = LHEGraphDataset(edgeType=args.edgeType)
 for sampleInfo in config['samples']:
     if 'ignore' in sampleInfo and sampleInfo['ignore']: continue
     name = sampleInfo['name']

@@ -71,8 +71,8 @@ class LHEGraphDataset(PyGDataset):
                 self.edge1List.append(f['graphs/edge1'])
                 self.edge2List.append(f['graphs/edge2'])
             if self.edgeType == 3:
-                self.edge1List.append(f['graphs/colorEdge1'])
-                self.edge2List.append(f['graphs/colorEdge2'])
+                self.edge1List.append(f['graphs/edgeColor1'])
+                self.edge2List.append(f['graphs/edgeColor2'])
 
         print(self.sampleInfo)
 
