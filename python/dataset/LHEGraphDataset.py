@@ -21,6 +21,14 @@ class LHEGraphDataset(PyGDataset):
         self.nFeats = len(self.featNames)
         self.maxEventsList = np.zeros(0)
 
+        self.edgeType = 0
+        if 'edgeType' in kwargs:
+            edgeTypeMap = {
+                'none':0, 'all':1,
+                'decay':2, 'color':3,
+            }
+            self.edgeType = edgeTypeMap[kwargs['edgeType']]
+
     def addSample(self, procName, fNamePattern, scale=1.):
         for fName in glob(fNamePattern):
             if not fName.endswith(".h5"): continue
@@ -59,8 +67,12 @@ class LHEGraphDataset(PyGDataset):
 
             self.featsList.append([f['events'][x] for x in self.featNames])
 
-            self.edge1List.append(f['graphs/edge1'])
-            self.edge2List.append(f['graphs/edge2'])
+            if self.edgeType == 2:
+                self.edge1List.append(f['graphs/edge1'])
+                self.edge2List.append(f['graphs/edge2'])
+            if self.edgeType == 3:
+                self.edge1List.append(f['graphs/colorEdge1'])
+                self.edge2List.append(f['graphs/colorEdge2'])
 
         print(self.sampleInfo)
 
@@ -81,9 +93,15 @@ class LHEGraphDataset(PyGDataset):
         feats = [self.featsList[fileIdx][i][idx] for i in range(self.nFeats)]
         feats = torch.tensor(np.array(feats).T).float()
 
-        edge1 = self.edge1List[fileIdx][idx]
-        edge2 = self.edge2List[fileIdx][idx]
-        edge = torch.LongTensor(np.stack([edge1, edge2]))
+        if self.edgeType == 0:
+            edge = torch.LongTensor([]).view(2,-1)
+        elif self.edgeType == 1:
+            ## FIXME: to be implemented for the fully connected graph
+            edge = torch.LongTensor([]).view(2,-1)
+        elif self.edgeType >= 2:
+            edge1 = self.edge1List[fileIdx][idx]
+            edge2 = self.edge2List[fileIdx][idx]
+            edge = torch.LongTensor(np.stack([edge1, edge2]))
 
         data = PyGData(x=feats, edge_index=edge)
         data.ww = torch.tensor(weight)
