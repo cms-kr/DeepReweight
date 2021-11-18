@@ -9,6 +9,8 @@ parser.add_argument('-t', '--trained', action='store', type=str, required=True, 
 parser.add_argument('-c', '--config', action='store', type=str, help='Configration file with sample information')
 parser.add_argument('--device', action='store', type=int, default=0, help='device name')
 parser.add_argument('--batch', action='store', type=int, default=32, help='Batch size')
+parser.add_argument('--edgeType', action='store', type=str, default='decay',
+                                  choices=('none', 'all', 'decay', 'color'), help='graph edge type')
 args = parser.parse_args()
 
 import matplotlib.pyplot as plt
@@ -42,7 +44,7 @@ if torch.cuda.is_available() and args.device >= 0: torch.cuda.set_device(args.de
 ##### Define dataset instance #####
 from dataset.LHEGraphDataset import *
 from torch_geometric.data import DataLoader
-dset = LHEGraphDataset()
+dset = LHEGraphDataset(edgeType=args.edgeType)
 #for sampleInfo in config['samples']:
 #    if 'ignore' in sampleInfo and sampleInfo['ignore']: continue
 #    name = sampleInfo['name']
