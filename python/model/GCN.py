@@ -20,7 +20,6 @@ class GCN(nn.Module):
         )
         
     def forward(self, data):
-        #data.edge_index = torch.LongTensor([]).view(2,-1)
         x = self.conv1(data.x, data.edge_index)
         #x = F.dropout(x, training=self.training)
         x = self.conv2(x, data.edge_index)

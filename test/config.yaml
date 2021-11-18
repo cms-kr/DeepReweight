@@ -3,7 +3,9 @@ samples:
   - name: tttt
     label: 1
     #path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/FCD0B4D1-E7D1-004A-B5AB-131A37EF1928.h5
-    path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/*.h5
+    #path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/5DA9FD4C-D58C-3C40-B8B8-91D7C5E065F2.h5
+    path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/963E85E5-FE6F-3C42-8EB9-8E2FE3A07E52.h5
+    #path: /store/hep/users/jhgoh/nurion4hep/20211116_1/graph/*.h5
     xsec: 0.012
     ngen: 11952188
 
@@ -12,8 +14,8 @@ training:
     nDataLoaders: 16
 
     shuffle: True
-    splitFractions: [0.6, 0.2] ## training set, validation set. (test set is the remaining sets)
+    splitFractions: [0.6, 0.4] ## training set, validation set. (test set is the remaining sets)
 
-    epoch: 400
-    learningRate: 1e-4
+    epoch: 1000
+    learningRate: 1e-3
 

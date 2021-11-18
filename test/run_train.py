@@ -70,7 +70,7 @@ if args.device >= 0 and torch.cuda.is_available():
 ##### Define optimizer instance #####
 import torch.optim as optim
 optm = optim.Adam(model.parameters(), lr=config['training']['learningRate'])
-crit = torch.nn.MSELoss(size_average=None, reduction='mean')
+crit = torch.nn.MSELoss(size_average=None, reduction='sum')
 
 ##### Start training #####
 with open(args.output+'/summary.txt', 'w') as fout:
@@ -107,7 +107,7 @@ for epoch in range(nEpoch):
         optm.zero_grad()
 
         ibatch = len(w)
-        trn_loss += loss.item()*ibatch
+        trn_loss += loss.item()
         nProcessed += ibatch
 
     trn_loss /= nProcessed 
@@ -117,6 +117,7 @@ for epoch in range(nEpoch):
     nProcessed = 0
     for i, data in enumerate(tqdm(valLoader)):
         data = data.to(device)
+        data.ww = data.ww.to(device)
         w = data.ww
 
         pred = model(data)
@@ -124,7 +125,7 @@ for epoch in range(nEpoch):
         loss = crit(pred.view(-1), w)
 
         ibatch = len(w)
-        val_loss += loss.item()*ibatch
+        val_loss += loss.item()
         nProcessed += ibatch
 
     val_loss /= nProcessed
